@@ -1,0 +1,14 @@
+{
+  "name": "cookbook-ui",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "CookBook frontend",
+  "dependencies": {
+  
+  },
+  "devDependencies": {
+
+  },
+  "author": "Savianu Bogdan",
+  "license": "MIT OR Apache-V2"
+}
