@@ -69,7 +69,7 @@ impl RecipeIngredientMac {
         _utx: &UserCtx,
         recipe_id: i64,
         ingredient_id: i64,
-    ) -> Result<RecipeIngredient, model::Error> {
+    ) -> Result<Vec<RecipeIngredient>, model::Error> {
         let sql = r#"
             SELECT recipe_id, ingredient_id, quantity, cid, ctime, mtime
             FROM recipe_ingredients
@@ -78,10 +78,10 @@ impl RecipeIngredientMac {
 
         let result = sqlx::query_as::<_, RecipeIngredient>(sql)
             .bind(recipe_id)
-            .fetch_one(db)
-            .await;
+            .fetch_all(db)
+            .await?;
 
-        handle_fetch_one_result(result, recipe_id, ingredient_id)
+        Ok(result)
     }
 
     pub async fn update(

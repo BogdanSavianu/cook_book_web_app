@@ -9,7 +9,7 @@ use super::{RecipeMac, RecipePatch};
 async fn model_recipe_create() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
     let data_fx = RecipePatch {
         title: Some("test - model_recipe_create 1".to_string()),
         ..Default::default()
@@ -29,7 +29,7 @@ async fn model_recipe_create() -> Result<(), Box<dyn std::error::Error>> {
 async fn model_recipe_get() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // -- ACTION
     let recipe = RecipeMac::get(&db, &utx, 1000).await?;
@@ -45,7 +45,7 @@ async fn model_recipe_get() -> Result<(), Box<dyn std::error::Error>> {
 async fn model_recipe_get_wrong_id() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // -- ACTION
     let result = RecipeMac::get(&db, &utx, 99).await;
@@ -67,7 +67,7 @@ async fn model_recipe_get_wrong_id() -> Result<(), Box<dyn std::error::Error>> {
 async fn model_recipe_update_ok() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
     let data_fx = RecipePatch {
         title: Some("test - model_recipe_update_ok 1".to_string()),
         ..Default::default()
@@ -94,7 +94,7 @@ async fn model_recipe_update_ok() -> Result<(), Box<dyn std::error::Error>> {
 async fn model_recipe_list() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // -- ACTION
     let recipes = RecipeMac::list(&db, &utx).await?;
@@ -111,7 +111,7 @@ async fn model_recipe_list() -> Result<(), Box<dyn std::error::Error>> {
 async fn model_recipe_delete_simple() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // -- ACTION
     let recipe = RecipeMac::delete(&db, &utx, 1000).await?;

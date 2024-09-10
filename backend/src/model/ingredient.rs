@@ -13,7 +13,7 @@ pub struct Ingredient {
     pub name: String,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Deserialize)]
 pub struct IngredientPatch {
     pub name: Option<String>,
 }
