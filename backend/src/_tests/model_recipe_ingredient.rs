@@ -1,8 +1,11 @@
 use crate::{
-    model::recipe_ingredient::RecipeIngredientPatch,
     model::{
-        db::init_db, ingredient::IngredientMac, recipe::RecipeMac,
-        recipe_ingredient::RecipeIngredientMac, Error,
+        self,
+        db::init_db,
+        ingredient::IngredientMac,
+        recipe::RecipeMac,
+        recipe_ingredient::{RecipeIngredientMac, RecipeIngredientPatch},
+        Error, Ingredient,
     },
     security::utx_from_token,
 };
@@ -11,7 +14,7 @@ use crate::{
 async fn model_recipe_ingredient_create() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // Fetch the existing "tomato soup" recipe and "tomatoes" ingredient
     let recipe = RecipeMac::get(&db, &utx, 1000).await?; // Assuming "tomato soup" has id 1000
@@ -49,7 +52,7 @@ async fn model_recipe_ingredient_create() -> Result<(), Box<dyn std::error::Erro
 async fn model_recipe_ingredient_get() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // Fetch the existing "tomato soup" recipe and "tomatoes" ingredient
     let recipe = RecipeMac::get(&db, &utx, 1000).await?;
@@ -76,15 +79,15 @@ async fn model_recipe_ingredient_get() -> Result<(), Box<dyn std::error::Error>>
     // -- CHECK
     assert_eq!(
         recipe_ingredient_created.recipe_id,
-        recipe_ingredient.recipe_id
+        recipe_ingredient[0].recipe_id
     );
     assert_eq!(
         recipe_ingredient_created.ingredient_id,
-        recipe_ingredient.ingredient_id
+        recipe_ingredient[0].ingredient_id
     );
     assert_eq!(
         recipe_ingredient_created.quantity,
-        recipe_ingredient.quantity
+        recipe_ingredient[0].quantity
     );
 
     Ok(())
@@ -94,20 +97,13 @@ async fn model_recipe_ingredient_get() -> Result<(), Box<dyn std::error::Error>>
 async fn model_recipe_ingredient_get_wrong_id() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // -- ACTION
     let result = RecipeIngredientMac::get(&db, &utx, 9999, 9999).await;
 
     // -- CHECK
-    match result {
-        Ok(_) => assert!(false, "Should not succeed"),
-        Err(Error::EntityNotFound(typ, id)) => {
-            assert_eq!("recipe_ingredients", typ);
-            assert_eq!(9999.to_string(), id);
-        }
-        other_error => assert!(false, "Wrong Error: {:?}", other_error),
-    }
+    assert_eq!(0, result.unwrap().len());
 
     Ok(())
 }
@@ -116,7 +112,7 @@ async fn model_recipe_ingredient_get_wrong_id() -> Result<(), Box<dyn std::error
 async fn model_recipe_ingredient_update_ok() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // Fetch the existing "tomato soup" recipe and "tomatoes" ingredient
     let recipe = RecipeMac::get(&db, &utx, 1000).await?;
@@ -168,7 +164,7 @@ async fn model_recipe_ingredient_update_ok() -> Result<(), Box<dyn std::error::E
 async fn model_recipe_ingredient_list() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // Fetch the existing "tomato soup" recipe and "tomatoes" ingredient
     let recipe = RecipeMac::get(&db, &utx, 1000).await?;
@@ -198,7 +194,7 @@ async fn model_recipe_ingredient_list() -> Result<(), Box<dyn std::error::Error>
 async fn model_recipe_ingredient_delete_simple() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // Fetch the existing "tomato soup" recipe and "tomatoes" ingredient
     let recipe = RecipeMac::get(&db, &utx, 1000).await?;

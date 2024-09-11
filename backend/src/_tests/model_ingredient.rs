@@ -9,7 +9,7 @@ use super::{IngredientMac, IngredientPatch};
 async fn model_ingredient_create() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
     let data_fx = IngredientPatch {
         name: Some("test - model_ingredient_create 1".to_string()),
         ..Default::default()
@@ -29,7 +29,7 @@ async fn model_ingredient_create() -> Result<(), Box<dyn std::error::Error>> {
 async fn model_ingredient_get() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // -- ACTION
     let ingredient = IngredientMac::get(&db, &utx, 1000).await?;
@@ -45,7 +45,7 @@ async fn model_ingredient_get() -> Result<(), Box<dyn std::error::Error>> {
 async fn model_ingredient_get_wrong_id() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // -- ACTION
     let result = IngredientMac::get(&db, &utx, 99).await;
@@ -67,7 +67,7 @@ async fn model_ingredient_get_wrong_id() -> Result<(), Box<dyn std::error::Error
 async fn model_ingredient_update_ok() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
     let data_fx = IngredientPatch {
         name: Some("test - model_todo_update_ok 1".to_string()),
         ..Default::default()
@@ -95,7 +95,7 @@ async fn model_ingredient_update_ok() -> Result<(), Box<dyn std::error::Error>> 
 async fn model_ingredient_list() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // -- ACTION
     let ingredients = IngredientMac::list(&db, &utx).await?;
@@ -113,7 +113,7 @@ async fn model_ingredient_list() -> Result<(), Box<dyn std::error::Error>> {
 async fn model_ingredient_delete_simple() -> Result<(), Box<dyn std::error::Error>> {
     // -- FIXTURE
     let db = init_db().await?;
-    let utx = utx_from_token("123").await?;
+    let utx = utx_from_token(&db, "123").await?;
 
     // -- ACTION
     let ingredient = IngredientMac::delete(&db, &utx, 1000).await?;
