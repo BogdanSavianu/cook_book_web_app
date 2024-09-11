@@ -94,6 +94,7 @@ fn json_response<D: Serialize>(data: D) -> Result<Json, warp::Rejection> {
     let response = json!({"data": data});
     Ok(warp::reply::json(&response))
 }
+
 // region: Test
 #[cfg(test)]
 #[path = "../_tests/web_ingredient.rs"]

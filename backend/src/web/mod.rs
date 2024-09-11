@@ -11,6 +11,7 @@ use std::{convert::Infallible, path::Path, sync::Arc};
 mod filter_auth;
 mod filter_utils;
 mod ingredient;
+mod recipe;
 
 pub async fn start_web(web_folder: &str, web_port: u16, db: Arc<Db>) -> Result<(), Error> {
     // validate web_folder
