@@ -1,1 +1,1 @@
-console.log("->> hello from main.ts");
+import './ui/ingredient-mvc.js';

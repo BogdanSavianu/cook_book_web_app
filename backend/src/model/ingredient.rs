@@ -11,11 +11,13 @@ use sqlx::mysql;
 pub struct Ingredient {
     pub id: i64,
     pub name: String,
+    pub quantity: String,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct IngredientPatch {
     pub name: Option<String>,
+    pub quantity: Option<String>,
 }
 // endregion: Ingredient Types
 
@@ -28,16 +30,17 @@ impl IngredientMac {
         utx: &UserCtx,
         data: IngredientPatch,
     ) -> Result<Ingredient, model::Error> {
-        let sql_insert = "INSERT INTO ingredients (name) VALUES (?)";
+        let sql_insert = "INSERT INTO ingredients (name, quantity) VALUES (?, ?)";
 
         let result = sqlx::query(sql_insert)
             .bind(data.name.unwrap_or_else(|| "untitled".to_string()))
+            .bind(data.quantity.unwrap_or_else(|| "unknown".to_string()))
             .execute(db)
             .await?;
 
         let last_insert_id = result.last_insert_id();
 
-        let sql_select = "SELECT id, name FROM ingredients WHERE id = ?";
+        let sql_select = "SELECT id, name, quantity FROM ingredients WHERE id = ?";
         let ingredient = sqlx::query_as::<_, Ingredient>(sql_select)
             .bind(last_insert_id)
             .fetch_one(db)
@@ -63,12 +66,18 @@ impl IngredientMac {
         id: i64,
         data: IngredientPatch,
     ) -> Result<Ingredient, model::Error> {
-        let sql = "UPDATE ingredients SET name = ? WHERE id = ?";
+        let sql = "UPDATE ingredients SET name = ?, quantity = ? WHERE id = ?";
 
         let name = data.name.unwrap_or_else(|| "untitled".to_string());
+        let quantity = data.quantity.unwrap_or_else(|| "unknown".to_string());
 
         // Perform the update query
-        sqlx::query(sql).bind(name).bind(id).execute(db).await?;
+        sqlx::query(sql)
+            .bind(name)
+            .bind(quantity)
+            .bind(id)
+            .execute(db)
+            .await?;
 
         // Return the updated ingredient by fetching it again
         let result = sqlx::query_as::<_, Ingredient>("SELECT * FROM ingredients WHERE id = ?")

@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+/* #region --- BASE */
+* {
+  /* best practices for application */
+  box-sizing: border-box;
+  /* To allow flex/grid box to shrink smaller than content 
+   see: https://stackoverflow.com/a/36247448/686724 */
+  min-width: 0;
+  min-height: 0;
+  /* layout normalization */
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+html {
+  padding: 2rem;
+
+  font-family: 'Roboto', sanse-serif;
+  font-size: 1rem;
+
+  display: grid;
+  justify-content: center;
+  grid-auto-columns: minmax(10rem, 40rem);
+}
+
+/* #endregion --- BASE */
+
+/* #region --- COMPONENT STYLES */
+
+/* Ingredient Input Container */
+.ingredient-input-container {
+  display: inline-block;
+  /* Ensures the container fits the input's width */
+  padding: 0.5rem;
+  /* Optional: adds some space around the input */
+  border: 1px solid #ccc;
+  /* Optional: adds a border around the container */
+  border-radius: 4px;
+  /* Optional: rounds the corners of the border */
+}
+
+input[type="text"] {
+  border: none;
+  /* Remove the default border of the input */
+  width: auto;
+  /* Make the input width fit its content */
+}
+
+/* #endregion --- COMPONENT STYLES */
