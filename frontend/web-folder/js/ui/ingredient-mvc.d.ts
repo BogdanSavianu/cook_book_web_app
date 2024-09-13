@@ -3,6 +3,7 @@ import { Ingredient } from '../model/ingredient-mco';
 declare class IngredientInput extends BaseHTMLElement {
     #private;
     init(): void;
+    onInputKeyUp(evt: KeyboardEvent): void;
 }
 declare global {
     interface HTMLElementTagNameMap {

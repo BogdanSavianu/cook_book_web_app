@@ -124,6 +124,7 @@ async fn model_ingredient_delete_simple() -> Result<(), Box<dyn std::error::Erro
     // -- CHECK - deleted item
     assert_eq!(1000, ingredient.id);
     assert_eq!("tomatoes", ingredient.name);
+    assert_eq!("3 pieces", ingredient.quantity);
 
     // -- CHECK - list
     let ingredients = IngredientMac::list(&db, &utx).await?;

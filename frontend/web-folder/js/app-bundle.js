@@ -637,6 +637,33 @@
 
   const _onEventsByConstructor = new Map();
   const _computedOnDOMEventsByConstructor = new WeakMap();
+  //#region    ---------- Public onEvent Decorator ---------- 
+  function onEvent(type, selector) {
+      return _onDOMEvent(null, type, selector);
+  }
+  //#endregion ---------- /Public onEvent Decorator ---------- 
+  // the decorator function
+  function _onDOMEvent(evtTarget, type, selector) {
+      // target references the element's class. It will be the constructor function for a static method or the prototype of the class for an instance member
+      return function (target, propertyKey, descriptor) {
+          descriptor.value;
+          const clazz = target.constructor;
+          // get the onEvents array for this clazz
+          let onEvents = _onEventsByConstructor.get(clazz);
+          if (onEvents == null) {
+              onEvents = [];
+              _onEventsByConstructor.set(clazz, onEvents);
+          }
+          // create and push the event
+          const onEvent = {
+              target: evtTarget,
+              name: propertyKey,
+              type: type,
+              selector: selector || null
+          };
+          onEvents.push(onEvent);
+      };
+  }
   /** Bind the element OnDOMEvent registred in the decorator _onDOMEvent  */
   function bindOnElementEventsDecorators(el) {
       const clazz = el.constructor;
@@ -740,6 +767,30 @@
 
   const _onHubEventByConstructor = new Map();
   const _computedOnHubEventByConstructor = new WeakMap();
+  //#region    ---------- Public onEvent Decorator ---------- 
+  /**
+   * `onHub` decorator to bind a hub event to this instance.
+   */
+  function onHub(hubName, topic, label) {
+      // target references the element's class. It will be the constructor function for a static method or the prototype of the class for an instance member
+      return function (target, propertyKey, descriptor) {
+          const clazz = target.constructor;
+          // get the onEvents array for this clazz
+          let onEvents = _onHubEventByConstructor.get(clazz);
+          if (onEvents == null) {
+              onEvents = [];
+              _onHubEventByConstructor.set(clazz, onEvents);
+          }
+          // create and push the event
+          const onEvent = {
+              methodName: propertyKey,
+              hubName,
+              topic,
+              label
+          };
+          onEvents.push(onEvent);
+      };
+  }
   //#endregion ---------- /Public onEvent Decorator ---------- 
   function hasHubEventDecorators(el) {
       return getComputedOnHubEvents(el.constructor) != null;
@@ -944,6 +995,31 @@
       return template.content;
   }
 
+  function first(el_or_selector, selector) {
+      // We do not have a selector at all, then, this call is for firstElementChild
+      if (!selector && typeof el_or_selector !== "string") {
+          const el = el_or_selector;
+          // try to get 
+          const firstElementChild = el.firstElementChild;
+          // if firstElementChild is null/undefined, but we have a firstChild, it is perhaps because not supported
+          if (!firstElementChild && el.firstChild) {
+              // If the firstChild is of type Element, return it. 
+              if (el.firstChild.nodeType === 1) {
+                  return el.firstChild;
+              }
+              // Otherwise, try to find the next element (using the next)
+              else {
+                  // TODO: Needs to look at typing here, this is a ChildNode
+                  return next(el.firstChild);
+              }
+          }
+          return firstElementChild;
+      }
+      // otherwise, the call was either (selector) or (el, selector), so foward to the querySelector
+      else {
+          return _execQuerySelector(false, el_or_selector, selector);
+      }
+  }
   function getChild(el, name) {
       name = name.toUpperCase();
       for (const child of el.children) {
@@ -976,6 +1052,51 @@
       }
       return result;
   }
+  // #endregion --- getChildren
+  // #region    --- next & prev
+  /**
+   * Get the eventual next sibling of an HTMLElement given (optionally as selector)
+   */
+  function next(el, selector) {
+      return _sibling(true, el, selector); // assume HTMLElement
+  }
+  /**
+   * Return the next or previous Element sibling
+   * @param next
+   * @param el
+   * @param selector
+   */
+  function _sibling(next, el, selector) {
+      const sibling = (next) ? 'nextSibling' : 'previousSibling';
+      let tmpEl = (el) ? el[sibling] : null;
+      // use "!=" for null and undefined
+      while (tmpEl != null && tmpEl != document) {
+          // only if node type is of Element, otherwise, 
+          if (tmpEl.nodeType === 1 && (!selector || tmpEl.matches(selector))) {
+              return tmpEl;
+          }
+          tmpEl = tmpEl[sibling];
+      }
+      return null;
+  }
+  // #endregion --- next & prev
+  // util: querySelector[All] wrapper
+  function _execQuerySelector(all, elOrSelector, selector) {
+      let el = null;
+      // if el is null or undefined, means we return nothing. 
+      if (elOrSelector == null) {
+          return null;
+      }
+      // if selector is undefined, it means we select from document and el is the document
+      if (typeof selector === "undefined") {
+          selector = elOrSelector;
+          el = document;
+      }
+      else {
+          el = elOrSelector;
+      }
+      return (all) ? el.querySelectorAll(selector) : el.querySelector(selector);
+  }
   // #endregion --- append
 
   document.createElement('div');
@@ -988,9 +1109,36 @@
       };
   }
 
+  /**
+   * c-ico - svg icons waring the svg use
+   * Note: Assume the symbols are local to the document
+   */
+  let Ico = class Ico extends BaseHTMLElement {
+      init() {
+          const name = this.getAttribute("name")?.trim();
+          const htmlContent = html `
+      <svg class="symbol">
+        <use xlink:href="#${name}"></use>
+      </svg>`;
+          this.append(htmlContent);
+      }
+  };
+  Ico = __decorate([
+      customElement('c-ico')
+  ], Ico);
+
   const API_BASE_PATH = '/api';
   async function webGet(path, data) {
       return webCall("GET", path, data);
+  }
+  async function webPost(path, data) {
+      return webCall("POST", path, data);
+  }
+  async function webPatch(path, data) {
+      return webCall("PATCH", path, data);
+  }
+  async function webDelete(path, data) {
+      return webCall("DELETE", path, data);
   }
   async function webCall(httpMethod, path, data) {
       const url = `${API_BASE_PATH}/${path}`;
@@ -1013,15 +1161,49 @@
           const data = await webGet("ingredients");
           return data;
       }
+      async create(data) {
+          // guard (INGREDIENT - validate data)
+          if (data.name == null || data.name.trim().length == 0) {
+              throw new Error("Cannot create ingredient with empty name");
+          }
+          if (data.quantity == null || data.quantity.trim().length == 0) {
+              throw new Error("Cannot create ingredient with empty quantity");
+          }
+          // to server
+          const newData = await webPost('ingredients', data);
+          // send event
+          hub('dataHub').pub('Ingredient', 'create', newData);
+          return newData;
+      }
+      async update(id, data) {
+          if (data.name == null || data.name.trim().length == 0) {
+              throw new Error("Cannot update ingredient with empty name");
+          }
+          if (data.quantity == null || data.quantity.trim().length == 0) {
+              throw new Error("Cannot update ingredient with empty quantity");
+          }
+          const newData = await webPatch(`ingredients/${id}`, data);
+          // event
+          hub('dataHub').pub('Ingredient', 'update', newData);
+          return newData;
+      }
+      async delete(id) {
+          // to server
+          const oldData = await webDelete(`ingredients/${id}`);
+          //event
+          hub('dataHub').pub('Ingredient', 'delete', oldData);
+          return oldData;
+      }
   }
   const ingredientMco = new IngredientMco();
 
-  var _IngredientMvc_ingredientInputEl, _IngredientMvc_ingredientListEl, _IngredientInput_inputEl, _IngredientItem_titleEl, _IngredientItem_data;
+  var _IngredientMvc_ingredientInputEl, _IngredientMvc_ingredientListEl, _IngredientInput_inputEl, _IngredientInput_inputQu, _IngredientItem_titleEl, _IngredientItem_data;
   let IngredientMvc = class IngredientMvc extends BaseHTMLElement {
       constructor() {
           super(...arguments);
           _IngredientMvc_ingredientInputEl.set(this, void 0);
           _IngredientMvc_ingredientListEl.set(this, void 0);
+          // #endregion --- Data Events
       }
       init() {
           var _a, _b;
@@ -1047,8 +1229,36 @@
           __classPrivateFieldGet(this, _IngredientMvc_ingredientListEl, "f").innerHTML = '';
           __classPrivateFieldGet(this, _IngredientMvc_ingredientListEl, "f").append(htmlContent);
       }
+      // #region  --- UI Events
+      onCheckIngredient(evt) {
+          const ingredientItem = evt.selectTarget.closest("ingredient-item");
+          const quantity = ingredientItem.data.quantity;
+          ingredientMco.update(ingredientItem.data.id, { quantity });
+      }
+      // #endregion  --- UI Events
+      // #region   --- Data Events
+      onIngredientUpdate(data) {
+          // find the ingredient in the UI
+          const ingredientItem = first(`ingredient-item.Ingredient-${data.id}`);
+          // if found, update it
+          if (ingredientItem) {
+              ingredientItem.data = data;
+          }
+      }
+      onIngredientCreate(data) {
+          this.refresh();
+      }
   };
   _IngredientMvc_ingredientInputEl = new WeakMap(), _IngredientMvc_ingredientListEl = new WeakMap();
+  __decorate([
+      onEvent('pointerup', 'c-check')
+  ], IngredientMvc.prototype, "onCheckIngredient", null);
+  __decorate([
+      onHub('dataHub', 'Ingredient', 'update')
+  ], IngredientMvc.prototype, "onIngredientUpdate", null);
+  __decorate([
+      onHub('dataHub', 'Ingredient', 'create')
+  ], IngredientMvc.prototype, "onIngredientCreate", null);
   IngredientMvc = __decorate([
       customElement("ingredient-mvc")
   ], IngredientMvc);
@@ -1056,16 +1266,39 @@
       constructor() {
           super(...arguments);
           _IngredientInput_inputEl.set(this, void 0);
+          _IngredientInput_inputQu.set(this, void 0);
+          // #endregion --- UI Events
       }
       init() {
-          let htmlContent = html `
+          let htmlName = html `
       <input type="text" style="width: 100%;" placeholder="What ingredient do you want to add?">
     `;
-          __classPrivateFieldSet(this, _IngredientInput_inputEl, getChild(htmlContent, 'input'), "f");
-          this.append(htmlContent);
+          let htmlQuantity = html `
+      <input type="text" style="width: 100%;" placeholder="What quantity?">
+    `;
+          __classPrivateFieldSet(this, _IngredientInput_inputEl, getChild(htmlName, 'input'), "f");
+          __classPrivateFieldSet(this, _IngredientInput_inputQu, getChild(htmlQuantity, 'input'), "f");
+          this.append(htmlName);
+          this.append(htmlQuantity);
+      }
+      // #region    --- UI Events
+      onInputKeyUp(evt) {
+          if (evt.key == "Enter") {
+              // get value from UI
+              const name = __classPrivateFieldGet(this, _IngredientInput_inputEl, "f").value;
+              const quantity = __classPrivateFieldGet(this, _IngredientInput_inputQu, "f").value;
+              // send create to server
+              ingredientMco.create({ name, quantity });
+              // don't wait, reset value input
+              __classPrivateFieldGet(this, _IngredientInput_inputEl, "f").value = '';
+              __classPrivateFieldGet(this, _IngredientInput_inputQu, "f").value = '';
+          }
       }
   };
-  _IngredientInput_inputEl = new WeakMap();
+  _IngredientInput_inputEl = new WeakMap(), _IngredientInput_inputQu = new WeakMap();
+  __decorate([
+      onEvent('keyup', 'input')
+  ], IngredientInput.prototype, "onInputKeyUp", null);
   IngredientInput = __decorate([
       customElement("ingredient-input")
   ], IngredientInput);

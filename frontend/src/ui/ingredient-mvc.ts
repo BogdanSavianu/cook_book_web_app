@@ -1,4 +1,4 @@
-import { BaseHTMLElement, customElement, getChild, getChildren, html } from 'dom-native';
+import { BaseHTMLElement, customElement, first, getChild, getChildren, html, OnEvent, onEvent, onHub } from 'dom-native';
 import { Ingredient, ingredientMco } from '../model/ingredient-mco';
 
 @customElement("ingredient-mvc")
@@ -31,23 +31,73 @@ class IngredientMvc extends BaseHTMLElement {
 
     this.#ingredientListEl.innerHTML = '';
     this.#ingredientListEl.append(htmlContent);
-
   }
+
+  // #region  --- UI Events
+  @onEvent('pointerup', 'c-check')
+  onCheckIngredient(evt: PointerEvent & OnEvent) {
+    const ingredientItem = evt.selectTarget.closest("ingredient-item")!;
+    const quantity = ingredientItem.data.quantity;
+
+    ingredientMco.update(ingredientItem.data.id, { quantity });
+  }
+  // #endregion  --- UI Events
+
+  // #region   --- Data Events
+  @onHub('dataHub', 'Ingredient', 'update')
+  onIngredientUpdate(data: Ingredient) {
+    // find the ingredient in the UI
+    const ingredientItem = first(`ingredient-item.Ingredient-${data.id}`) as IngredientItem | undefined;
+    // if found, update it
+    if (ingredientItem) {
+      ingredientItem.data = data;
+    }
+  }
+
+  @onHub('dataHub', 'Ingredient', 'create')
+  onIngredientCreate(data: Ingredient) {
+    this.refresh();
+  }
+  // #endregion --- Data Events
 
 }
 
 @customElement("ingredient-input")
 class IngredientInput extends BaseHTMLElement {
   #inputEl!: HTMLInputElement;
+  #inputQu!: HTMLInputElement;
 
   init() {
-    let htmlContent = html`
+    let htmlName = html`
       <input type="text" style="width: 100%;" placeholder="What ingredient do you want to add?">
     `;
-    this.#inputEl = getChild(htmlContent, 'input');
-    this.append(htmlContent);
+    let htmlQuantity = html`
+      <input type="text" style="width: 100%;" placeholder="What quantity?">
+    `;
+
+    this.#inputEl = getChild(htmlName, 'input');
+    this.#inputQu = getChild(htmlQuantity, 'input');
+    this.append(htmlName);
+    this.append(htmlQuantity);
   }
+
+  // #region    --- UI Events
+  @onEvent('keyup', 'input')
+  onInputKeyUp(evt: KeyboardEvent) {
+    if (evt.key == "Enter") {
+      // get value from UI
+      const name = this.#inputEl.value;
+      const quantity = this.#inputQu.value;
+      // send create to server
+      ingredientMco.create({ name, quantity });
+      // don't wait, reset value input
+      this.#inputEl.value = '';
+      this.#inputQu.value = '';
+    }
+  }
+  // #endregion --- UI Events
 }
+
 
 // ingredient-input tag
 declare global {
