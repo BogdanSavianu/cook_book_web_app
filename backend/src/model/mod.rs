@@ -8,8 +8,7 @@ mod recipe_ingredient;
 // re-export
 pub use db::{init_db, Db};
 pub use ingredient::{Ingredient, IngredientMac, IngredientPatch};
-pub use recipe::{RecipeMac, RecipePatch, RecipePatchInner};
-pub use recipe_ingredient::{RecipeIngredientMac, RecipeIngredientPatch};
+pub use recipe::{Recipe, RecipeMac, RecipePatch};
 
 #[derive(ThisError, Debug)]
 pub enum Error {

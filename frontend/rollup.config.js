@@ -16,12 +16,11 @@ export default [
       // rollup_cjs(),
       rollup_nre(),
       rollup_tsc({
-        verbosity: 1,
         tsconfig: './tsconfig.json',
-        tsconfigOverride: {
-
-        },
-        useTsconfigDeclarationDir: false
+        compilerOptions: {
+          declaration: false,
+          declarationDir: null
+        }
       }),
       // terser({ compress: true, format: { comments: false } })
     ]

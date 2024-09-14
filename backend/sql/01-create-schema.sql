@@ -1,7 +1,8 @@
 -- Ingredients table
 CREATE TABLE ingredients (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL
+  name VARCHAR(255) NOT NULL,
+  quantity VARCHAR(50) NOT NULL
 );
 
 -- Recipes table
@@ -18,7 +19,7 @@ CREATE TABLE recipe_ingredients (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   recipe_id BIGINT NOT NULL,
   ingredient_id BIGINT NOT NULL,
-  ingredient_name VARCHAR(255),
+  ingredient_name varchar(255) DEFAULT 'unknown',
   quantity VARCHAR(50),
   cid BIGINT DEFAULT 0,
   ctime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

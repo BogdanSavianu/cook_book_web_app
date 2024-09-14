@@ -15,7 +15,7 @@ serde_derive = "1.0"
 # Web libs
 warp = "0.3"
 # DB libs
-sqlx = { version = "0.5", features = [ "runtime-tokio-rustls", "mysql", "chrono", "offline" ] }
+sqlx = { version = "0.5", features = [ "runtime-tokio-rustls", "mysql", "chrono" ] }
 sqlb = "0.0.7"
 
 [dev-dependencies]
